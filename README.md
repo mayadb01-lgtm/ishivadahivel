@@ -1,8 +1,8 @@
-# TGT Business Management System
+# ishivadahivel Business Management System
 
 ## 📋 Project Overview
 
-TGT is a comprehensive full-stack business management system designed to streamline operations across multiple business verticals including Guest House (GH), Restaurant (Rest), and Office Book (OB) management. The platform provides real-time analytics, sales tracking, expense management, payment processing across multiple modes (Cash, Card, PPS, PPC), and advanced reporting capabilities with interactive data visualizations.
+ishivadahivel is a comprehensive full-stack business management system designed to streamline operations across multiple business verticals including Guest House (GH), Restaurant (Rest), and Office Book (OB) management. The platform provides real-time analytics, sales tracking, expense management, payment processing across multiple modes (Cash, Card, PPS, PPC), and advanced reporting capabilities with interactive data visualizations.
 
 ## 🚀 Tech Stack
 
@@ -176,7 +176,7 @@ TGT is a comprehensive full-stack business management system designed to streaml
 ## 📁 Project Structure
 
 ```
-TGT/
+ishivadahivel/
 ├── public/                          # Static assets
 ├── server/                          # Backend (Node.js + Express)
 │   ├── controller/                  # API route controllers
@@ -310,14 +310,14 @@ TGT/
 ```bash
 # Clone the repository
 git clone https://github.com/harshprajapati8347/Ashirwad.git
-cd TGT
+cd ishivadahivel
 
 # Install dependencies
 yarn install
 
 # Create .env file (copy from .env.example if available)
 # Add required environment variables:
-# VITE_REACT_APP_BUSINESS_NAME=TGT
+# VITE_REACT_APP_BUSINESS_NAME=ishivadahivel
 # VITE_API_URL=http://localhost:8080/api/v1
 
 # Start development server
@@ -335,7 +335,7 @@ cd server
 yarn install
 
 # Create .env file with required variables:
-# DB_URL=mongodb://localhost:27017/TGT
+# DB_URL=mongodb://localhost:27017/ishivadahivel
 # PORT=8080
 # JWT_SECRET=your_jwt_secret
 # JWT_EXPIRE=7d
@@ -457,11 +457,11 @@ vercel --prod
 # On your server (PM2 example)
 npm install -g pm2
 cd server
-pm2 start server.js --name TGT-backend
+pm2 start server.js --name ishivadahivel-backend
 
 # Or use Docker
-docker build -t TGT-backend .
-docker run -p 8080:8080 TGT-backend
+docker build -t ishivadahivel-backend .
+docker run -p 8080:8080 ishivadahivel-backend
 ```
 
 ## 🔧 Configuration
@@ -471,14 +471,14 @@ docker run -p 8080:8080 TGT-backend
 **Frontend (.env)**
 
 ```env
-VITE_REACT_APP_BUSINESS_NAME=TGT
+VITE_REACT_APP_BUSINESS_NAME=ishivadahivel
 VITE_API_URL=http://localhost:8080/api/v1
 ```
 
 **Backend (server/.env)**
 
 ```env
-DB_URL=mongodb://localhost:27017/TGT
+DB_URL=mongodb://localhost:27017/ishivadahivel
 PORT=8080
 JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRE=7d
@@ -525,7 +525,7 @@ By accessing this repository, you acknowledge and agree to the following:
 
 #### 1. Proprietary Rights
 
-- This software, including all source code, documentation, design, architecture, and associated materials, is the exclusive property of **TGT Business Management**.
+- This software, including all source code, documentation, design, architecture, and associated materials, is the exclusive property of **ishivadahivel Business Management**.
 - All intellectual property rights, including but not limited to copyrights, trademarks, trade secrets, and patents, are reserved.
 
 #### 2. Prohibited Actions
@@ -582,9 +582,9 @@ Unauthorized use, copying, or distribution of this software may result in:
 
 For licensing inquiries, authorized access requests, or legal questions, contact:
 
-**TGT Business Management**  
+**ishivadahivel Business Management**  
 **Email:** mayadb01@gmail.com  
-**Repository:** https://github.com/mayadb01-lgtm/TGT-GH-Rest
+**Repository:** https://github.com/mayadb01-lgtm/ishivadahivel-GH-Rest
 
 ### Third-Party Licenses
 

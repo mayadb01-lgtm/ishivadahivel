@@ -43,7 +43,9 @@ const EntryAccordion = ({ title, period, onSubmit, bgColor, selectedDate }) => {
           <TableComponent
             period={period}
             title={`${title} Table`}
-            rowsLength={11}
+            rowsLength={
+              import.meta.env.VITE_REACT_APP_BUSINESS_NAME === "UHU" ? 11 : 16
+            }
             onSubmit={onSubmit}
             selectedDate={selectedDate}
           />

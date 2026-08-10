@@ -72,7 +72,7 @@ const ExpensesTable = ({
     (index, key, value) => {
       setRestExpensesData((prevData) =>
         prevData.map((row, i) =>
-          i === index ? { ...row, [key]: value || "" } : row
+          i === index ? { ...row, [key]: value ?? "" } : row
         )
       );
     },
@@ -89,6 +89,7 @@ const ExpensesTable = ({
         amount: 0,
         expenseName: "",
         categoryName: "",
+        isVendor: false,
         createDate: selectedDate,
       },
     ]);
@@ -122,8 +123,11 @@ const ExpensesTable = ({
       _id: exp._id,
       expenseName: exp.expenseName,
       categoryName: category.categoryName,
+      isVendor: exp?.isVendor || false,
     }))
   );
+
+  console.log("flattenedExpenses", flattenedExpenses);
 
   const handleRemoveRow = useCallback(
     (id) => {
@@ -147,13 +151,14 @@ const ExpensesTable = ({
           options.find((option) => option.expenseName === currentValue) || ""
         }
         onChange={(_, value) => {
-          handleUpdateRow(index, rowKey, value?.expenseName);
+          handleUpdateRow(index, rowKey, value?.expenseName || "");
           handleUpdateRow(index, "_id", value ? value._id : "");
           handleUpdateRow(
             index,
             "categoryName",
             value ? value.categoryName : ""
           );
+          handleUpdateRow(index, "isVendor", value ? value?.isVendor : false);
         }}
         renderInput={(params) => (
           <TextField {...params} variant="outlined" size="small" fullWidth />

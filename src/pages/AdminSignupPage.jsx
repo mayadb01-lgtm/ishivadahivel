@@ -44,7 +44,7 @@ const AdminSignupPage = () => {
       }
       dispatch(createAdmin(form));
 
-      navigate("/");
+      navigate("/dashboard");
       setForm({ name: "", email: "", password: "", referralCode: "" });
     } catch (err) {
       toast.error(err.response.data.message);

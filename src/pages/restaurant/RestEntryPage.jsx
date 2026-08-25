@@ -65,7 +65,9 @@ const RestEntryPage = () => {
       })) || [];
 
   const pendingVendorsOptions = restCategory
-    ?.filter((category) => category.expense.some((exp) => exp?.isVendor))
+    ?.filter((category) =>
+      category.expense.some((exp) => exp?.isVendor)
+    )
     .flatMap((category) =>
       category.expense
         .filter((exp) => exp?.isVendor)
@@ -113,6 +115,8 @@ const RestEntryPage = () => {
     categoryName: "",
     expenseName: "",
     isVendor: false,
+    fullname: "",
+    fullname_id: "",
     createDate: selectedDate,
   }));
   const [restExpensesData, setRestExpensesData] = useState(

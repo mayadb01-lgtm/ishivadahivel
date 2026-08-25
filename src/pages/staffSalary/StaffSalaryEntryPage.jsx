@@ -33,27 +33,30 @@ import {
   createSalarySheet,
   updateSalarySheet,
   deleteSalarySheet,
+  getSalaryAndOvertimeByMonthRange,
 } from "../../redux/actions/staffSalaryAction";
 
 dayjs.locale("en-gb");
 
 const tableColumns = [
   { label: "No", width: "4%", align: "center" },
-  { label: "Staff Name", width: "17%", align: "left" },
-  { label: "Per Day Pay", width: "10%", align: "center" },
-  { label: "Attendance", width: "9%", align: "center" },
-  { label: "Total", width: "10%", align: "center" },
-  { label: "Rest Upaad", width: "10%", align: "center" },
-  { label: "Office Upaad", width: "10%", align: "center" },
-  { label: "Current Balance", width: "11%", align: "center" },
-  { label: "Salary Paid?", width: "8%", align: "center" },
-  { label: "Prev Month Salary", width: "11%", align: "center" },
+  { label: "Staff Name", width: "12%", align: "left" },
+  { label: "Per Day Pay", width: "8%", align: "center" },
+  { label: "Attendance", width: "7%", align: "center" },
+  { label: "Total", width: "8%", align: "center" },
+  { label: "Rest Upaad", width: "8%", align: "center" },
+  { label: "Office Upaad", width: "8%", align: "center" },
+  { label: "Current Balance", width: "9%", align: "center" },
+  { label: "Salary Paid?", width: "6%", align: "center" },
+  { label: "Prev Month Salary", width: "10%", align: "center" },
+  { label: "Prev Month Salary and Overtime", width: "10%", align: "center" },
 ];
 
 const buildDraftRows = (
   staff,
   staffTotalUpaad = {},
-  officeBookCategoryUpaad = {}
+  officeBookCategoryUpaad = {},
+  salaryAndOvertime = {},
 ) =>
   staff.map((s) => {
     const restaurantUpaad = staffTotalUpaad?.[s._id?.toString()] || 0;
@@ -71,16 +74,18 @@ const buildDraftRows = (
       officeUpaad,
       currentBalance,
       salaryPaid: false,
+      // Informational only - not persisted, not used in any total/balance calculation.
+      salaryAndOvertime: Number(salaryAndOvertime?.[s._id?.toString()]) || 0,
     };
   });
 
 const StaffSalaryEntryPage = () => {
   const dispatch = useAppDispatch();
   const { loading: staffLoading, restStaff } = useAppSelector(
-    (state) => state.restStaff
+    (state) => state.restStaff,
   );
   const { loading: staffUpaadLoading, staffTotalUpaad } = useAppSelector(
-    (state) => state.restEntry
+    (state) => state.restEntry,
   );
   const { loading: officeBookCategoryUpaadLoading, officeBookCategoryUpaad } =
     useAppSelector((state) => state.officeBook);
@@ -89,6 +94,7 @@ const StaffSalaryEntryPage = () => {
     salarySheet,
     salarySheetNotFound,
     previousSalarySheet,
+    salaryAndOvertime,
   } = useAppSelector((state) => state.staffSalary);
 
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
@@ -104,13 +110,23 @@ const StaffSalaryEntryPage = () => {
   const previousMonth = previousMonthDate.month() + 1;
   const previousYear = previousMonthDate.year();
 
+  // "YYYY-MM" key matching the shape returned by getSalaryAndOvertimeByMonthRange
+  const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+  const salaryAndOvertimeMonthBucket = salaryAndOvertime?.[monthKey] || {};
+
   useEffect(() => {
     dispatch(getRestStaff());
     dispatch(getStaffUpaadByMonth(month, year));
     dispatch(getOfficeBookCategoryUpaadByMonthAndYear(month, year));
     dispatch(getSalarySheet(month, year));
     dispatch(getPreviousMonthSalarySheet(previousMonth, previousYear));
-  }, [dispatch, month, year, previousMonth, previousYear]);
+    dispatch(
+      getSalaryAndOvertimeByMonthRange(
+        selectedMonth.startOf("month").format("DD-MM-YYYY"),
+        selectedMonth.endOf("month").format("DD-MM-YYYY"),
+      ),
+    );
+  }, [dispatch, month, year, previousMonth, previousYear, selectedMonth]);
 
   // Map of staffId -> amount paid last month (only for staff whose "Salary Paid?"
   // checkbox was checked in the previous month's sheet)
@@ -142,7 +158,8 @@ const StaffSalaryEntryPage = () => {
     if (statusFilter === "All") return rowsWithIndex;
     return rowsWithIndex.filter(
       ({ row }) =>
-        (staffStatusById[row.staffId?.toString()] || "Active") === statusFilter
+        (staffStatusById[row.staffId?.toString()] || "Active") ===
+        statusFilter,
     );
   }, [rows, statusFilter, staffStatusById]);
 
@@ -164,6 +181,10 @@ const StaffSalaryEntryPage = () => {
           officeUpaad,
           currentBalance: total - restaurantUpaad - officeUpaad,
           salaryPaid: Boolean(row.salaryPaid),
+          // Informational only - not persisted, not used in any total/balance calculation.
+          salaryAndOvertime:
+            Number(salaryAndOvertimeMonthBucket[row.staffId?.toString()]) ||
+            0,
         };
       });
 
@@ -171,7 +192,12 @@ const StaffSalaryEntryPage = () => {
     } else {
       setRows([]);
     }
-  }, [salarySheet, staffTotalUpaad, officeBookCategoryUpaad]);
+  }, [
+    salarySheet,
+    staffTotalUpaad,
+    officeBookCategoryUpaad,
+    salaryAndOvertimeMonthBucket,
+  ]);
 
   useEffect(() => {
     if (
@@ -181,14 +207,30 @@ const StaffSalaryEntryPage = () => {
       officeBookCategoryUpaad
     ) {
       setRows(
-        buildDraftRows(restStaff, staffTotalUpaad, officeBookCategoryUpaad)
+        buildDraftRows(
+          restStaff,
+          staffTotalUpaad,
+          officeBookCategoryUpaad,
+          salaryAndOvertimeMonthBucket,
+        ),
       );
     }
-  }, [isNew, restStaff, staffTotalUpaad, officeBookCategoryUpaad]);
+  }, [
+    isNew,
+    restStaff,
+    staffTotalUpaad,
+    officeBookCategoryUpaad,
+    salaryAndOvertimeMonthBucket,
+  ]);
 
   const resetForm = () => {
     setRows(
-      buildDraftRows(restStaff, staffTotalUpaad, officeBookCategoryUpaad)
+      buildDraftRows(
+        restStaff,
+        staffTotalUpaad,
+        officeBookCategoryUpaad,
+        salaryAndOvertimeMonthBucket,
+      ),
     );
   };
 
@@ -212,14 +254,14 @@ const StaffSalaryEntryPage = () => {
           Number(updatedRow.officeUpaad || 0);
 
         return updatedRow;
-      })
+      }),
     );
   };
 
   // Create
   const handleCreate = () => {
     const confirmSubmit = window.confirm(
-      `Are you sure you want to create salary sheet for ${selectedMonth.format("MMMM YYYY")}?`
+      `Are you sure you want to create salary sheet for ${selectedMonth.format("MMMM YYYY")}?`,
     );
     if (!confirmSubmit) return;
     const editableRows = rows.map(
@@ -237,17 +279,17 @@ const StaffSalaryEntryPage = () => {
         attendance,
         salaryPaid,
         salaryPaidAmount: currentBalance || 0,
-      })
+      }),
     );
     dispatch(
-      createSalarySheet({ month, year, rows: editableRows, remarks: "" })
+      createSalarySheet({ month, year, rows: editableRows, remarks: "" }),
     );
   };
 
   // Update
   const handleUpdate = () => {
     const confirmSubmit = window.confirm(
-      `Are you sure you want to update salary sheet for ${selectedMonth.format("MMMM YYYY")}?`
+      `Are you sure you want to update salary sheet for ${selectedMonth.format("MMMM YYYY")}?`,
     );
     if (!confirmSubmit) return;
     const editableRows = rows.map(
@@ -265,17 +307,17 @@ const StaffSalaryEntryPage = () => {
         attendance,
         salaryPaid,
         salaryPaidAmount: currentBalance || 0,
-      })
+      }),
     );
     dispatch(
-      updateSalarySheet(month, year, { rows: editableRows, remarks: "" })
+      updateSalarySheet(month, year, { rows: editableRows, remarks: "" }),
     );
   };
 
   // Delete
   const handleDelete = () => {
     const confirmSubmit = window.confirm(
-      `Are you sure you want to delete salary sheet for ${selectedMonth.format("MMMM YYYY")}?`
+      `Are you sure you want to delete salary sheet for ${selectedMonth.format("MMMM YYYY")}?`,
     );
     if (!confirmSubmit) return;
     dispatch(deleteSalarySheet(month, year));
@@ -504,7 +546,7 @@ const StaffSalaryEntryPage = () => {
                 width: "100%",
                 boxShadow: 1,
                 borderRadius: "8px",
-                overflowX: "auto",
+                overflowX: "hidden",
               }}
             >
               <Table
@@ -516,7 +558,8 @@ const StaffSalaryEntryPage = () => {
                   "& .MuiTableCell-root": {
                     borderRight: "1px solid",
                     borderColor: "divider",
-                    px: 1,
+                    px: 0.5,
+                    overflow: "hidden",
                   },
                   "& .MuiTableCell-root:last-of-type": {
                     borderRight: "none",
@@ -532,8 +575,10 @@ const StaffSalaryEntryPage = () => {
                         sx={{
                           width: col.width,
                           fontWeight: 700,
-                          fontSize: "13px",
-                          whiteSpace: "nowrap",
+                          fontSize: "12px",
+                          whiteSpace: "normal",
+                          lineHeight: 1.2,
+                          wordBreak: "break-word",
                           backgroundColor: "#f5f3fc",
                           color: "text.primary",
                         }}
@@ -581,7 +626,7 @@ const StaffSalaryEntryPage = () => {
                             handleRowChange(
                               rowIndex,
                               "perDayPay",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                           fullWidth
@@ -660,7 +705,7 @@ const StaffSalaryEntryPage = () => {
                             handleRowChange(
                               rowIndex,
                               "salaryPaid",
-                              e.target.checked
+                              e.target.checked,
                             )
                           }
                           color="success"
@@ -670,7 +715,7 @@ const StaffSalaryEntryPage = () => {
                       <TableCell align="center">
                         {(() => {
                           const previousAmount = getPreviousMonthPaidAmount(
-                            row.staffId
+                            row.staffId,
                           );
                           return previousAmount === "Not Paid" ? (
                             <Typography variant="body2" color="text.disabled">
@@ -686,6 +731,17 @@ const StaffSalaryEntryPage = () => {
                             </Typography>
                           );
                         })()}
+                      </TableCell>
+                      <TableCell align="center">
+                        <TextField
+                          variant="outlined"
+                          type="number"
+                          size="small"
+                          value={row.salaryAndOvertime || 0}
+                          disabled
+                          fullWidth
+                          inputProps={{ style: { textAlign: "center" } }}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

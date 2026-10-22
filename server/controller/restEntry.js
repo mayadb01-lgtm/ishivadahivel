@@ -2,11 +2,21 @@ import { Router } from "express";
 import RestEntry from "../model/restEntry.js";
 import dayjs from "dayjs";
 const router = Router();
+const who = (req) => (req.user ? `${req.user.name || req.user.email || ""}${req.user.role === "Admin" ? " (Admin)" : ""}` : "");
 
 // Create a new Entry
 router.post("/create-entry", async (req, res) => {
   try {
     const reqBody = req.body;
+
+    // Ek din ki ek hi entry (double-tap / do phone se do baar submit na ho)
+    const already = await RestEntry.findOne({ createDate: reqBody.createDate }).lean();
+    if (already) {
+      return res.status(400).json({
+        success: false,
+        message: "An entry already exists for this date. Edit it instead.",
+      });
+    }
 
     const upad = JSON.parse(reqBody.upad);
     const pending = JSON.parse(reqBody.pending);
@@ -14,6 +24,8 @@ router.post("/create-entry", async (req, res) => {
     const pendingUsers = JSON.parse(reqBody.pendingUsers);
 
     const entry = await RestEntry.create({
+      enteredBy: who(req),
+      enteredAt: new Date(),
       upad,
       pending,
       expenses,
@@ -98,6 +110,8 @@ router.put("/update-entry/:date", async (req, res) => {
         totalPP: reqBody.totalPP,
         totalCash: reqBody.totalCash,
         grandTotal: reqBody.grandTotal,
+        computerAmount: reqBody.computerAmount, // pehle edit pe save nahi hota tha
+        updatedBy: who(req),
         date: reqBody.date,
         createDate: reqBody.createDate,
         updatedDateTime: reqBody.updatedDateTime,
@@ -239,39 +253,39 @@ router.get("/get-levana-entries/:startDate/:endDate", async (req, res) => {
   }
 });
 
-// Get Expenses Entries by Date Range
-// router.get("/get-expenses-entries/:startDate/:endDate", async (req, res) => {
-//   try {
-//     const start = dayjs(req.params.startDate, "DD-MM-YYYY");
-//     const end = dayjs(req.params.endDate, "DD-MM-YYYY");
+// Get Expenses Entries by Date Range (Kharch report) - 10-Aug-2026 ko galti se band ho gaya tha, wapas chalu
+router.get("/get-expenses-entries/:startDate/:endDate", async (req, res) => {
+  try {
+    const start = dayjs(req.params.startDate, "DD-MM-YYYY");
+    const end = dayjs(req.params.endDate, "DD-MM-YYYY");
 
-//     if (!start.isValid() || !end.isValid()) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid date format. Please use DD-MM-YYYY.",
-//       });
-//     }
+    if (!start.isValid() || !end.isValid()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format. Please use DD-MM-YYYY.",
+      });
+    }
 
-//     const entries = await RestEntry.find({
-//       entryCreateDate: {
-//         $gte: start.startOf("day").toDate(),
-//         $lte: end.endOf("day").toDate(),
-//       },
-//     }).sort({ entryCreateDate: 1 });
+    const entries = await RestEntry.find({
+      entryCreateDate: {
+        $gte: start.startOf("day").toDate(),
+        $lte: end.endOf("day").toDate(),
+      },
+    }).sort({ entryCreateDate: 1 });
 
-//     const expensesEntries = entries.flatMap((entry) => entry.expenses);
+    const expensesEntries = entries.flatMap((entry) => entry.expenses);
 
-//     res.status(200).json({
-//       success: true,
-//       data: expensesEntries,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// });
+    res.status(200).json({
+      success: true,
+      data: expensesEntries,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 router.get(
   "/get-entries-by-payment-method/:startDate/:endDate",

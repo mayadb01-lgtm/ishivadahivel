@@ -1,5 +1,5 @@
 {
-  "name": "ishivadahivel Entry",
+  "name": "ishivadahivel",
   "short_name": "ishivadahivel",
   "description": "Guest House, Restaurant aur Office ki roz ki entry",
   "start_url": "/entry",
@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F1F5F9",
-  "theme_color": "#0F766E",
+  "theme_color": "#5B21B6",
   "icons": [
     {
       "src": "/icons/icon-192.png",
